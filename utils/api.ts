@@ -4,6 +4,8 @@ import { getData, setData } from "./storage";
 
 import { storage } from "../constants/Server";
 
+axios.defaults.withCredentials = true;
+axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 axios.interceptors.request.use(async (request) => {
   const server = await getData(storage.server);
   const token = await getData(storage.token);
@@ -23,13 +25,13 @@ axios.interceptors.request.use(async (request) => {
 export interface DeviceInfo {
   "name": string;
   "model": string;
+  "version": string;
   "app_version": string;
-  "android_version": string;
-  "device_unique_id": string;
+  "unique_id": string;
 }
 
 export const addDevice = (info: DeviceInfo) => {
-  return axios.post("add/device", info).then(res => res.data);
+  return axios.post("devices", info).then(res => res.data);
 };
 
 /**

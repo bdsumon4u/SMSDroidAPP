@@ -1,12 +1,13 @@
-import EditScreenInfo from '../components/EditScreenInfo';
-
 import { StyleSheet, Button, Alert } from 'react-native';import { Text, View } from '../components/Themed';
 import { RootTabScreenProps } from '../types';
 import { storage } from '../constants/Server';
 import { setData } from '../utils/storage';
 import { setCookie } from '../utils/cookie';
-import RNLoginScreen from "react-native-login-screen";
+import { addDevice } from '../utils/api';
 import React, { useState, useEffect } from 'react';
+import Constants from 'expo-constants';
+import * as Device from 'expo-device';
+import DeviceInfo from 'react-native-device-info';
 import { BarCodeScanner } from 'expo-barcode-scanner';
 
 export default function QRCodeScreen({ navigation }: RootTabScreenProps<'TabOne'>) {
@@ -34,8 +35,34 @@ export default function QRCodeScreen({ navigation }: RootTabScreenProps<'TabOne'
             });
             setCookie(data.server, 'TOKEN', data.token);
 
-
-
+            addDevice({
+              "name": Device.brand,
+              "model": Device.modelName,
+              "version": Device.platformApiLevel,
+              "app_version": DeviceInfo.getVersion(),
+              "unique_id": DeviceInfo.getUniqueId(),
+            }).then((res) => {
+              console.log(res)
+              navigation.navigate("WebViewScreen", data);
+            }).catch((err) => {
+              const messages = err.response.data.message;
+              let alertMessage = "";
+              if (typeof messages == "object") {
+                for (const key in messages) {
+                  alertMessage += messages[key][0] + "\n\r";
+                }
+              } else {
+                alertMessage = messages;
+              }
+              Alert.alert("Invalid QR Code", alertMessage, [
+                {
+                  text: "Ok",
+                  onPress: () => {
+                    navigation.navigate("LoginScreen");
+                  },
+                },
+              ]);
+            });
           } else {
             throw new Error("Invalid Json");
           }
@@ -45,7 +72,7 @@ export default function QRCodeScreen({ navigation }: RootTabScreenProps<'TabOne'
             {
               text: "Ok",
               onPress: () => {
-                navigation.navigate("Login");
+                navigation.navigate("LoginScreen");
               },
             },
           ]);
