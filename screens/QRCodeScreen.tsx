@@ -1,13 +1,8 @@
 import { StyleSheet, Button, Alert } from 'react-native';import { Text, View } from '../components/Themed';
 import { RootTabScreenProps } from '../types';
-import { storage } from '../constants/Server';
-import { setData } from '../utils/storage';
-import { setCookie } from '../utils/cookie';
-import { addDevice } from '../utils/api';
+import { onLoginSuccess } from '../utils/auth';
 import React, { useState, useEffect } from 'react';
 import Constants from 'expo-constants';
-import * as Device from 'expo-device';
-import DeviceInfo from 'react-native-device-info';
 import { BarCodeScanner } from 'expo-barcode-scanner';
 
 export default function QRCodeScreen({ navigation }: RootTabScreenProps<'TabOne'>) {
@@ -24,59 +19,7 @@ export default function QRCodeScreen({ navigation }: RootTabScreenProps<'TabOne'
     const onBarCodeScanned = ({ type, data }) => {
       setScanned(true);
       // alert(`Bar code with type ${type} and data ${data} has been scanned!`);
-      try {
-          data = JSON.parse(data);
-          if (data && data.hasOwnProperty("token") && data.hasOwnProperty("server")) {
-            setData(storage.server, data.server).catch(() => {
-              throw new Error("Failed to store server");
-            });
-            setData(storage.token, data.token).catch(() => {
-              throw new Error("Failed to store token");
-            });
-            setCookie(data.server, 'TOKEN', data.token);
-
-            addDevice({
-              "name": Device.brand,
-              "model": Device.modelName,
-              "version": Device.platformApiLevel,
-              "app_version": DeviceInfo.getVersion(),
-              "unique_id": DeviceInfo.getUniqueId(),
-            }).then((res) => {
-              console.log(res)
-              navigation.navigate("WebViewScreen", data);
-            }).catch((err) => {
-              const messages = err.response.data.message;
-              let alertMessage = "";
-              if (typeof messages == "object") {
-                for (const key in messages) {
-                  alertMessage += messages[key][0] + "\n\r";
-                }
-              } else {
-                alertMessage = messages;
-              }
-              Alert.alert("Invalid QR Code", alertMessage, [
-                {
-                  text: "Ok",
-                  onPress: () => {
-                    navigation.navigate("LoginScreen");
-                  },
-                },
-              ]);
-            });
-          } else {
-            throw new Error("Invalid Json");
-          }
-        } catch (e) {
-          console.log(e);
-          Alert.alert("Invalid QR Code", "Please scan the valid qr code", [
-            {
-              text: "Ok",
-              onPress: () => {
-                navigation.navigate("LoginScreen");
-              },
-            },
-          ]);
-        }
+      onLoginSuccess(JSON.parse(data), navigation);
     };
 
     if (hasPermission === null) {

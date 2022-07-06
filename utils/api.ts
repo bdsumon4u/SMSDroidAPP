@@ -1,7 +1,7 @@
 import axios from "axios";
-
+import * as Device from 'expo-device';
+import DeviceInfo from 'react-native-device-info';
 import { getData, setData } from "./storage";
-
 import { storage } from "../constants/Server";
 
 axios.defaults.withCredentials = true;
@@ -10,10 +10,12 @@ axios.interceptors.request.use(async (request) => {
   const server = await getData(storage.server);
   const token = await getData(storage.token);
   request.headers["Content-Type"] = "application/json";
-  request.headers["accept"] = "application/json";
+  request.headers["Accept"] = "application/json";
 
-  if (token && server) {
+  if (server) {
     request.baseURL = server + "/api/";
+  }
+  if (token) {
     request.headers["Authorization"] = "Bearer " + token;
   }
   return request;
@@ -22,16 +24,45 @@ axios.interceptors.request.use(async (request) => {
   return Promise.reject(error);
 });
 
-export interface DeviceInfo {
-  "name": string;
-  "model": string;
-  "version": string;
-  "app_version": string;
-  "unique_id": string;
+export const getToken = (_server, _email, _password) => {
+    setData(storage.server, _server);
+    console.log('getToken', _server, _email, _password)
+    return axios.post('sanctum/token', {
+        email: _email,
+        password: _password,
+    })
 }
 
-export const addDevice = (info: DeviceInfo) => {
-  return axios.post("devices", info).then(res => res.data);
+export const addDevice = (data, navigation) => {
+  return axios.post("devices", {
+     "name": Device.brand,
+     "model": Device.modelName,
+     "version": Device.platformApiLevel,
+     "app_version": DeviceInfo.getVersion(),
+     "unique_id": DeviceInfo.getUniqueId(),
+   })
+    .then((res) => {
+      navigation.navigate("WebViewScreen", data);
+    }).catch((err) => {
+      console.log(err)
+      const messages = err.response.data.message;
+      let alertMessage = "";
+      if (typeof messages == "object") {
+        for (const key in messages) {
+          alertMessage += messages[key][0] + "\n\r";
+        }
+      } else {
+        alertMessage = messages;
+      }
+      Alert.alert("Device Not Added", alertMessage, [
+        {
+          text: "Ok",
+          onPress: () => {
+            navigation.navigate("LoginScreen");
+          },
+        },
+      ]);
+    });
 };
 
 /**
