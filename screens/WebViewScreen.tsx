@@ -1,8 +1,16 @@
 import React, { useRef, useEffect } from 'react';
-import { StyleSheet, Alert, BackHandler } from 'react-native';
+import { StyleSheet, Alert, BackHandler, NativeModules, NativeEventEmitter } from 'react-native';
 import { Text, View } from '../components/Themed';
 import { WebView } from 'react-native-webview';
 import CustomActivityIndicator from '../components/ActivityIndicator';
+
+const DirectSms = NativeModules.DirectSms;
+const DirectSmsEmitter = new NativeEventEmitter(DirectSms);
+
+DirectSmsEmitter.addListener("onMessageReceived", evt => {
+  const device_id = DeviceInfo.getUniqueId();
+  console.log(evt);
+});
 
 export default function WebViewScreen({navigation, route: {params}}) {
     const webRef = useRef();
