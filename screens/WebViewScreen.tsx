@@ -1,10 +1,31 @@
-import React, { useEffect } from 'react';
-import { StyleSheet, Alert } from 'react-native';
+import React, { useRef, useEffect } from 'react';
+import { StyleSheet, Alert, BackHandler } from 'react-native';
 import { Text, View } from '../components/Themed';
 import { WebView } from 'react-native-webview';
 import CustomActivityIndicator from '../components/ActivityIndicator';
 
 export default function WebViewScreen({navigation, route: {params}}) {
+    const webRef = useRef();
+
+    const onBackPress = () => {
+        webRef.current.goBack();
+        return true;
+    };
+
+    useEffect(() => {
+        BackHandler.addEventListener("hardwareBackPress", onBackPress);
+
+//         getSendingSettings().then((res) => {
+//             setData(storage.sending_settings, res.data);
+//         }).catch((err) => {
+//             console.log(err);
+//         });
+
+        return () => {
+            BackHandler.removeEventListener("hardwareBackPress", onBackPress);
+        };
+    }, []);
+
     const displayError = (e) => {
         Alert.alert(
             "Error",
@@ -26,6 +47,7 @@ export default function WebViewScreen({navigation, route: {params}}) {
 
     return (
         <WebView
+            ref={webRef}
             style={styles.container}
             sharedCookiesEnabled={true}
             source={{ uri: `${params.server}/dashboard` }}
