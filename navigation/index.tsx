@@ -53,7 +53,7 @@ function RootNavigator() {
     <Stack.Navigator>
       <Stack.Screen name="LoginScreen" component={LoginScreen} options={{ headerShown: false }} />
       <Stack.Screen name="QRCodeScreen" component={QRCodeScreen} options={{ headerShown: true, title: 'Scan QR Code' }} />
-      <Stack.Screen name="WebViewScreen" component={WebViewScreen} options={{ headerBackVisible: false, title: 'Dashboard', headerRight:()=> <WebViewRight/> }} />
+      <Stack.Screen name="WebViewScreen" component={WebViewScreen} options={{ headerBackVisible: false, title: 'XMS Panel', headerRight:()=> <WebViewRight/> }} />
       <Stack.Screen name="NotFound" component={NotFoundScreen} options={{ title: 'Oops!' }} />
     </Stack.Navigator>
   );
